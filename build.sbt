@@ -8,5 +8,7 @@ lazy val root = project
 
     scalaVersion := scala3Version,
 
+    scalacOptions ++= Seq("-Xfatal-warnings"),
+
     libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
   )
