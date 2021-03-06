@@ -126,7 +126,7 @@ object MinecraftRCONClient {
         }
 
         /** Decode the remaining fields from the response buffer.
-          * Format: [4-byte request id | 4-byte message size | variable length message]. */
+          * Format: [4-byte request id | 4-byte message type | variable length message]. */
         def decodeResponse(respBytes: ByteBuffer, respSize: Int, requestID: Int): Try[Response] = {
                 val respID = respBytes.getInt()
                 val msgType = respBytes.getInt()
