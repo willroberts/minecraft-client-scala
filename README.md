@@ -1,20 +1,14 @@
 # minecraft-client-scala
 
-This is an RCON shell for Minecraft servers, written in Scala 3.
+A client for the Minecraft RCON API, written in Scala 3.
 
-## Starting the test server
+## Library Usage
 
-```bash
-$ docker pull itzg/minecraft-server
-$ docker run --name=minecraft-server -p 25575:25575 -d -e EULA=TRUE itzg/minecraft-server
-```
+TBD
 
-## Configuration
+## Shell Utility
 
-The values for `Host`, `Port`, and `Password` are currently constants in [`Main.scala`](src/main/scala/Main.scala). The
-default values will work when using the above Docker image.
-
-## Usage
+If you are looking for a tool rather than a library, run the `main` package with `sbt`:
 
 ```bash
 $ sbt run
@@ -26,3 +20,25 @@ Seed: [4740948148837486117]
 There are 0 of a max of 20 players online:
 > exit
 ```
+
+The values for `Host`, `Port`, and `Password` are currently constants in [`Main.scala`](src/main/scala/Main.scala). The
+default values will work when using the above Docker image.
+
+## Starting a server for testing
+
+```bash
+$ docker pull itzg/minecraft-server
+$ docker run --name=minecraft-server -p 25575:25575 -d -e EULA=TRUE itzg/minecraft-server
+```
+
+## Running Tests
+
+After starting the test server in Docker:
+
+```bash
+$ sbt test
+```
+
+## Reference
+
+- https://wiki.vg/Rcon
