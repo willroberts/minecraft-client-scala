@@ -13,28 +13,32 @@ final case class RequestIDMismatchException(
 ) extends Exception(message, cause)
 
 /** MinecraftRCONClient provides a TCP client for Minecraft RCON servers. */
-object MinecraftRCONClient {
+class MinecraftRCONClient(
+        host: String,
+        port: Int,
+) {
+        /** Connect on initialization */
+        val sock: Socket = new Socket(InetAddress.getByName(host), port)
+        val reader: InputStream = sock.getInputStream
+        val writer: OutputStream = sock.getOutputStream
+
         /** Monotonic ID generator. */
         val requestID: AtomicLong = new AtomicLong(0)
 
-        def Connect(host: String, port: Int): (InputStream, OutputStream) = {
-                val sock: Socket = new Socket(InetAddress.getByName(host), port)
-                val reader: InputStream = sock.getInputStream
-                val writer: OutputStream = sock.getOutputStream
-
-                (reader, writer)
-        }
-
         /** Authenticate logs into the RCON server */
-        def Authenticate(password: String, writer: OutputStream, reader: InputStream): Try[Message] = {
-                SendMessage(MessageType.Authenticate.id, password, writer, reader) match {
+        def Authenticate(password: String): Try[Message] = {
+                sendMessage(MessageType.Authenticate.id, password, writer, reader) match {
                         case Success(resp) => Success(resp)
                         case Failure(f) => Failure(f)
                 }
         }
 
-        /** SendMessage writes a serialized RCON message to the TCP socket and returns the response. */
-        def SendMessage(msgType: Int, body: String, writer: OutputStream, reader: InputStream): Try[Message] = {
+        def SendCommand(body: String): Try[Message] = {
+                sendMessage(MessageType.Command.id, body, writer, reader)
+        }
+
+        /** sendMessage writes a serialized RCON message to the TCP socket and returns the response. */
+        def sendMessage(msgType: Int, body: String, writer: OutputStream, reader: InputStream): Try[Message] = {
                 val reqSize: Int = body.length + MessageEncoder.HeaderSize
                 val reqID: Int = requestID.getAndIncrement.toInt
                 val req: Message = Message(reqSize, reqID, msgType, body.getBytes)

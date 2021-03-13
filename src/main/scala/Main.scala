@@ -30,8 +30,8 @@ object MinecraftRCONShell {
                 }
 
                 /** Connect to the server and authenticate */
-                val (reader, writer) = MinecraftRCONClient.Connect(host, port)
-                MinecraftRCONClient.Authenticate(password, writer, reader) match {
+                val client = new MinecraftRCONClient(host, port)
+                client.Authenticate(password) match {
                         case Success(_) => {}
                         case Failure(f) => {
                                 println("failed to authenticate")
@@ -49,7 +49,7 @@ object MinecraftRCONShell {
                                 if (Array("exit", "quit").contains(input)) {
                                         loop.break
                                 }
-                                MinecraftRCONClient.SendMessage(MessageType.Command.id, input, writer, reader) match {
+                                client.SendCommand(input) match {
                                         case Success(resp) => { println((resp.Body.map(_.toChar)).mkString) }
                                         case Failure(f) => { println("error for command '%s': %s".format(input, f.getMessage())) }
                                 }

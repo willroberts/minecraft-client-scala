@@ -4,7 +4,11 @@ A client for the Minecraft RCON API, written in Scala 3.
 
 ## Library Usage
 
-TBD
+```scala
+val client = new MinecraftRCONClient("127.0.0.1", 25575)
+client.Authenticate("minecraft") // returns Try[Message], check errors with match.
+client.SendCommand("seed") // returns Try[Message], see Message.Body for response.
+```
 
 ## Shell Utility
 
