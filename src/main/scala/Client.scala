@@ -27,18 +27,19 @@ class MinecraftRCONClient(
 
         /** Authenticate logs into the RCON server */
         def Authenticate(password: String): Try[Message] = {
-                sendMessage(MessageType.Authenticate.id, password, writer, reader) match {
+                sendMessage(MessageType.Authenticate.id, password) match {
                         case Success(resp) => Success(resp)
                         case Failure(f) => Failure(f)
                 }
         }
 
+        /** SendCommand sends one RCON command to the server and returns the response. */
         def SendCommand(body: String): Try[Message] = {
-                sendMessage(MessageType.Command.id, body, writer, reader)
+                sendMessage(MessageType.Command.id, body)
         }
 
         /** sendMessage writes a serialized RCON message to the TCP socket and returns the response. */
-        def sendMessage(msgType: Int, body: String, writer: OutputStream, reader: InputStream): Try[Message] = {
+        def sendMessage(msgType: Int, body: String): Try[Message] = {
                 val reqSize: Int = body.length + MessageEncoder.HeaderSize
                 val reqID: Int = requestID.getAndIncrement.toInt
                 val req: Message = Message(reqSize, reqID, msgType, body.getBytes)
