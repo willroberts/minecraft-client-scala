@@ -1,13 +1,9 @@
 package minecraft
 
 import java.io.{InputStream, OutputStream}
-import java.net.{InetAddress, Socket}
 import java.nio.{ByteBuffer, ByteOrder}
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.atomic.AtomicLong
-import scala.io.StdIn.readLine
 import scala.util.{Try, Success, Failure}
-import scala.util.control.Breaks
 
 /** RequestIDMismatchException is returned when the server responds with an unexpected response ID, indicating an error. */
 final case class RequestIDMismatchException(
