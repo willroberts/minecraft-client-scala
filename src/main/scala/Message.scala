@@ -1,7 +1,5 @@
 package minecraft
 
-/** This is a Minecraft RCON client written in Scala, using Java stdlib networking.
-  * Running this code connects to a server, authenticates, and retrieves the world seed. */
 import java.io.{InputStream, OutputStream}
 import java.net.{InetAddress, Socket}
 import java.nio.{ByteBuffer, ByteOrder}
