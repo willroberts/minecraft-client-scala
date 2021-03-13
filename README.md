@@ -19,9 +19,6 @@ default values will work when using the above Docker image.
 ```bash
 $ sbt run
 ...
-starting minecraft client
-authenticating
-authenticated successfully
 starting RCON shell, quit with 'exit', 'quit', or Ctrl-C
 > seed
 Seed: [4740948148837486117]
