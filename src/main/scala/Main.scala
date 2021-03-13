@@ -9,12 +9,12 @@ import scala.io.StdIn.readLine
 import scala.util.{Try, Success, Failure}
 import scala.util.control.Breaks
 
-/** Response contains the deseralized RCON response from the server. */
-final case class Response (
+/** Message contains an RCON request or response. */
+final case class Message (
         val Size: Int,
         val ID: Int,
-        val MsgType: Int,
-        val Body: String,
+        val Type: Int,
+        val Body: Array[Byte],
 )
 
 /** MessageType enumerates the type codes for RCON messages, e.g. 2 for 'COMMAND'. */
@@ -42,14 +42,12 @@ object MinecraftRCONClient {
 
         /** Main function runs an interactive shell for RCON commands. */
         @main def shell: Unit = {
-                println("starting minecraft client")
                 val sock: Socket = new Socket(InetAddress.getByName(Host), Port)
                 val reader: InputStream = sock.getInputStream
                 val writer: OutputStream = sock.getOutputStream
 
-                println("authenticating")
                 authenticate(Password, writer, reader) match {
-                        case Success(_) => { println("authenticated successfully") }
+                        case Success(_) => {}
                         case Failure(f) => {
                                 println("failed to authenticate")
                                 sock.close
@@ -67,7 +65,7 @@ object MinecraftRCONClient {
                                         loop.break
                                 }
                                 sendMessage(MessageType.Command.id, input, writer, reader) match {
-                                        case Success(resp) => { println(resp.Body) }
+                                        case Success(resp) => { println((resp.Body.map(_.toChar)).mkString) }
                                         case Failure(f) => { println("error for command '%s': %s".format(input, f.getMessage())) }
                                 }
                         }
@@ -77,7 +75,7 @@ object MinecraftRCONClient {
         }
 
         /** authenticate logs into the RCON server */
-        def authenticate(password: String, writer: OutputStream, reader: InputStream): Try[Response] = {
+        def authenticate(password: String, writer: OutputStream, reader: InputStream): Try[Message] = {
                 sendMessage(MessageType.Authenticate.id, password, writer, reader) match {
                         case Success(resp) => Success(resp)
                         case Failure(f) => Failure(f)
@@ -85,39 +83,49 @@ object MinecraftRCONClient {
         }
 
         /** Writes a serialized RCON message to the TCP socket and returns the response. */
-        def sendMessage(msgType: Int, msg: String, writer: OutputStream, reader: InputStream): Try[Response] = {
-                val id: Int = requestID.getAndIncrement.toInt
-                val bytes: ByteBuffer = serializeMessage(id, msgType, msg)
+        def sendMessage(msgType: Int, body: String, writer: OutputStream, reader: InputStream): Try[Message] = {
+                val reqSize: Int = body.length + HeaderSize
+                val reqID: Int = requestID.getAndIncrement.toInt
+                val req: Message = Message(reqSize, reqID, msgType, body.getBytes)
+                val reqBytes: ByteBuffer = EncodeMessage(req)
 
                 /** Send the request to the server. */
-                writer.write(bytes.array)
+                writer.write(reqBytes.array)
                 writer.flush
 
-                /** read the first four bytes of the response to determine how much data to read */
-                val respSizeBuffer: ByteBuffer = ByteBuffer.wrap(reader.readNBytes(4))
-                respSizeBuffer.order(ByteOrder.LITTLE_ENDIAN)
-                val respSize: Int = respSizeBuffer.getInt
+                /** Read and parse the response. */
+                /** Detect the total size to read */
+                var sizeBytes: Array[Byte] = reader.readNBytes(4)
+                val sizeBuffer: ByteBuffer = ByteBuffer.wrap(sizeBytes)
+                sizeBuffer.order(ByteOrder.LITTLE_ENDIAN)
+                val respSize: Int = sizeBuffer.getInt
+                sizeBuffer.flip
 
-                /** read and decode all remaining data */
-                val respBytesBuffer: ByteBuffer = ByteBuffer.wrap(reader.readNBytes(respSize))
-                respBytesBuffer.order(ByteOrder.LITTLE_ENDIAN)
-                decodeResponse(respBytesBuffer, respSize, id) match {
-                        case Success(resp) => Success(resp)
-                        case Failure(f) => Failure(f)
+                /** Read remaining bytes */
+                val respBuffer: ByteBuffer = ByteBuffer.allocate(respSize+4).put(sizeBuffer)
+                respBuffer.order(ByteOrder.LITTLE_ENDIAN)
+                respBuffer.put(reader.readNBytes(respSize))
+                respBuffer.flip
+                val resp: Message = DecodeMessage(respBuffer)
+
+                /** Detect errors by checking the response ID. */
+                if (resp.ID != reqID) {
+                        Failure(new RequestIDMismatchException("invalid response ID: got %d, expected %d".format(resp.ID, reqID)))
+                } else {
+                        Success(resp)
                 }
         }
 
         /** Populate the request buffer.
           * Format: [4-byte request size | 4-byte request id | 4-byte message size | variable length message | 2-byte terminator]. */
-        def serializeMessage(id: Int, msgType: Int, msg: String): ByteBuffer = {
-                val size: Int = msg.getBytes.length + HeaderSize
-                val bytes: ByteBuffer = ByteBuffer.allocate(size+4)
+        def EncodeMessage(msg: Message): ByteBuffer = {
+                val bytes: ByteBuffer = ByteBuffer.allocate(msg.Size+4)
 
                 bytes.order(ByteOrder.LITTLE_ENDIAN)
-                bytes.putInt(size)
-                bytes.putInt(id)
-                bytes.putInt(msgType)
-                bytes.put(msg.getBytes)
+                bytes.putInt(msg.Size)
+                bytes.putInt(msg.ID)
+                bytes.putInt(msg.Type)
+                bytes.put(msg.Body)
                 bytes.put(0.toByte)
                 bytes.put(0.toByte)
                 bytes.flip
@@ -127,23 +135,19 @@ object MinecraftRCONClient {
 
         /** Decode the remaining fields from the response buffer.
           * Format: [4-byte request id | 4-byte message type | variable length message]. */
-        def decodeResponse(respBytes: ByteBuffer, respSize: Int, requestID: Int): Try[Response] = {
-                val respID = respBytes.getInt()
-                val msgType = respBytes.getInt()
-
-                /** Detect errors by checking the response ID. */
-                if (respID != requestID) {
-                        Failure(new RequestIDMismatchException("invalid response ID: got %d, expected %d".format(respID, requestID)))
-                }
+        def DecodeMessage(bytes: ByteBuffer): Message = {
+                bytes.order(ByteOrder.LITTLE_ENDIAN)
+                val size: Int = bytes.getInt
+                val id: Int = bytes.getInt
+                val msgType: Int = bytes.getInt
 
                 /** Read the response body if it exists. */
-                var bodyString: String = ""
-                if (respSize - HeaderSize > 0) {
-                        var body: Array[Byte] = new Array[Byte](respSize-HeaderSize)
-                        respBytes.get(body)
-                        bodyString = (body.map(_.toChar)).mkString
+                val remainingBytes: Int = size - HeaderSize
+                var bodyBuffer: Array[Byte] = new Array[Byte](remainingBytes)
+                for (i <- 0 until remainingBytes) {
+                        bodyBuffer(i) = bytes.get
                 }
 
-                Success(Response(respSize, respID, msgType, bodyString))
+                Message(size, id, msgType, bodyBuffer)
         }
 }
