@@ -32,29 +32,44 @@ final case class RequestIDMismatchException(
 /** MinecraftRCONClient provides a TCP client for Minecraft RCON servers. */
 object MinecraftRCONClient {
         /** Constants. */
-        val Host: String = "127.0.0.1"
-        val Port: Int = 25575
-        val Password: String = "minecraft"
+        val DefaultHost: String = "127.0.0.1"
+        val DefaultPort: Int = 25575
+        val DefaultPassword: String = "minecraft"
         val HeaderSize: Int = 10;
 
         /** Monotonic ID generator. */
         val requestID: AtomicLong = new AtomicLong(0)
 
         /** Main function runs an interactive shell for RCON commands. */
-        @main def shell: Unit = {
-                val sock: Socket = new Socket(InetAddress.getByName(Host), Port)
+        @main def shell(args: String*): Unit = {
+                var host: String = DefaultHost
+                var port: Int = DefaultPort
+                var password: String = DefaultPassword
+
+                /** Parse command-line arguments if provided */
+                for ( i <- 0 until args.length ) {
+                        args(i) match {
+                                case "--host" => { host = args(i+1) }
+                                case "--port" => { port = args(i+1).toInt }
+                                case "--password" => { password = args(i+1) }
+                                case _ => { }
+                        }
+                }
+
+                /** Connect to the server and authenticate */
+                val sock: Socket = new Socket(InetAddress.getByName(host), port)
                 val reader: InputStream = sock.getInputStream
                 val writer: OutputStream = sock.getOutputStream
-
-                authenticate(Password, writer, reader) match {
+                authenticate(password, writer, reader) match {
                         case Success(_) => {}
                         case Failure(f) => {
                                 println("failed to authenticate")
                                 sock.close
-                                return
+                                System.exit(1)
                         }
                 }
 
+                /** Start the RCON shell */
                 println("starting RCON shell, quit with 'exit', 'quit', or Ctrl-C")
                 val loop = new Breaks;
                 loop.breakable {
@@ -70,8 +85,8 @@ object MinecraftRCONClient {
                                 }
                         }
                 }
-
                 sock.close
+                System.exit(0)
         }
 
         /** authenticate logs into the RCON server */

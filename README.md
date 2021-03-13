@@ -11,7 +11,8 @@ TBD
 If you are looking for a tool rather than a library, run the `main` package with `sbt`:
 
 ```bash
-$ sbt run
+$ sbt
+sbt> run --host 127.0.0.1 --port 25575 --password minecraft
 ...
 starting RCON shell, quit with 'exit', 'quit', or Ctrl-C
 > seed
@@ -20,9 +21,6 @@ Seed: [4740948148837486117]
 There are 0 of a max of 20 players online:
 > exit
 ```
-
-The values for `Host`, `Port`, and `Password` are currently constants in [`Main.scala`](src/main/scala/Main.scala). The
-default values will work when using the above Docker image.
 
 ## Starting a server for testing
 

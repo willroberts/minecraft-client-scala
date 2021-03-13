@@ -10,5 +10,7 @@ lazy val root = project
 
     scalacOptions ++= Seq("-Xfatal-warnings"),
 
-    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
+    libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
+
+    trapExit := false
   )
