@@ -1,3 +1,4 @@
+package minecraft
 
 import java.nio.{ByteBuffer, ByteOrder}
 
@@ -14,7 +15,7 @@ class TestEncodeMessage {
       0, 0 /** Terminator */
     )
 
-    val result = MinecraftRCONClient.EncodeMessage(Message(14, 1, MessageType.Command.id, "test".getBytes))
+    val result = MessageEncoder.EncodeMessage(Message(14, 1, MessageType.Command.id, "test".getBytes))
     assertArrayEquals(result.array, expected)
   }
 }
@@ -31,7 +32,7 @@ class TestDecodeMessage {
     input.put("test".getBytes) /** Message body */
     input.flip()
 
-    val output = MinecraftRCONClient.DecodeMessage(input)
+    val output = MessageEncoder.DecodeMessage(input)
     assertEquals(output.Size, expected.Size)
     assertEquals(output.ID, expected.ID)
     assertEquals(output.Type, expected.Type)

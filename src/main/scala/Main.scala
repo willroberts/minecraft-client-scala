@@ -1,3 +1,5 @@
+package minecraft
+
 /** This is a Minecraft RCON client written in Scala, using Java stdlib networking.
   * Running this code connects to a server, authenticates, and retrieves the world seed. */
 import java.io.{InputStream, OutputStream}
@@ -8,20 +10,6 @@ import java.util.concurrent.atomic.AtomicLong
 import scala.io.StdIn.readLine
 import scala.util.{Try, Success, Failure}
 import scala.util.control.Breaks
-
-/** Message contains an RCON request or response. */
-final case class Message (
-        val Size: Int,
-        val ID: Int,
-        val Type: Int,
-        val Body: Array[Byte],
-)
-
-/** MessageType enumerates the type codes for RCON messages, e.g. 2 for 'COMMAND'. */
-object MessageType extends Enumeration {
-        type MessageType = Value
-        val Response, Unused, Command, Authenticate = Value
-}
 
 /** RequestIDMismatchException is returned when the server responds with an unexpected response ID, indicating an error. */
 final case class RequestIDMismatchException(
@@ -35,7 +23,6 @@ object MinecraftRCONClient {
         val DefaultHost: String = "127.0.0.1"
         val DefaultPort: Int = 25575
         val DefaultPassword: String = "minecraft"
-        val HeaderSize: Int = 10;
 
         /** Monotonic ID generator. */
         val requestID: AtomicLong = new AtomicLong(0)
@@ -99,10 +86,10 @@ object MinecraftRCONClient {
 
         /** Writes a serialized RCON message to the TCP socket and returns the response. */
         def sendMessage(msgType: Int, body: String, writer: OutputStream, reader: InputStream): Try[Message] = {
-                val reqSize: Int = body.length + HeaderSize
+                val reqSize: Int = body.length + MessageEncoder.HeaderSize
                 val reqID: Int = requestID.getAndIncrement.toInt
                 val req: Message = Message(reqSize, reqID, msgType, body.getBytes)
-                val reqBytes: ByteBuffer = EncodeMessage(req)
+                val reqBytes: ByteBuffer = MessageEncoder.EncodeMessage(req)
 
                 /** Send the request to the server. */
                 writer.write(reqBytes.array)
@@ -121,7 +108,7 @@ object MinecraftRCONClient {
                 respBuffer.order(ByteOrder.LITTLE_ENDIAN)
                 respBuffer.put(reader.readNBytes(respSize))
                 respBuffer.flip
-                val resp: Message = DecodeMessage(respBuffer)
+                val resp: Message = MessageEncoder.DecodeMessage(respBuffer)
 
                 /** Detect errors by checking the response ID. */
                 if (resp.ID != reqID) {
@@ -129,40 +116,5 @@ object MinecraftRCONClient {
                 } else {
                         Success(resp)
                 }
-        }
-
-        /** Populate the request buffer.
-          * Format: [4-byte request size | 4-byte request id | 4-byte message size | variable length message | 2-byte terminator]. */
-        def EncodeMessage(msg: Message): ByteBuffer = {
-                val bytes: ByteBuffer = ByteBuffer.allocate(msg.Size+4)
-
-                bytes.order(ByteOrder.LITTLE_ENDIAN)
-                bytes.putInt(msg.Size)
-                bytes.putInt(msg.ID)
-                bytes.putInt(msg.Type)
-                bytes.put(msg.Body)
-                bytes.put(0.toByte)
-                bytes.put(0.toByte)
-                bytes.flip
-
-                bytes
-        }
-
-        /** Decode the remaining fields from the response buffer.
-          * Format: [4-byte request id | 4-byte message type | variable length message]. */
-        def DecodeMessage(bytes: ByteBuffer): Message = {
-                bytes.order(ByteOrder.LITTLE_ENDIAN)
-                val size: Int = bytes.getInt
-                val id: Int = bytes.getInt
-                val msgType: Int = bytes.getInt
-
-                /** Read the response body if it exists. */
-                val remainingBytes: Int = size - HeaderSize
-                var bodyBuffer: Array[Byte] = new Array[Byte](remainingBytes)
-                for (i <- 0 until remainingBytes) {
-                        bodyBuffer(i) = bytes.get
-                }
-
-                Message(size, id, msgType, bodyBuffer)
         }
 }
