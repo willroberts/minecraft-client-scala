@@ -1,6 +1,7 @@
 package minecraft
 
 import java.io.{InputStream, OutputStream}
+import java.net.{InetAddress, Socket}
 import java.nio.{ByteBuffer, ByteOrder}
 import java.util.concurrent.atomic.AtomicLong
 import scala.util.{Try, Success, Failure}
@@ -15,6 +16,14 @@ final case class RequestIDMismatchException(
 object MinecraftRCONClient {
         /** Monotonic ID generator. */
         val requestID: AtomicLong = new AtomicLong(0)
+
+        def Connect(host: String, port: Int): (InputStream, OutputStream) = {
+                val sock: Socket = new Socket(InetAddress.getByName(host), port)
+                val reader: InputStream = sock.getInputStream
+                val writer: OutputStream = sock.getOutputStream
+
+                (reader, writer)
+        }
 
         /** Authenticate logs into the RCON server */
         def Authenticate(password: String, writer: OutputStream, reader: InputStream): Try[Message] = {

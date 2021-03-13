@@ -2,9 +2,6 @@
   * Running this code connects to a server, authenticates, and retrieves the world seed. */
 package minecraft
 
-import java.io.{InputStream, OutputStream}
-import java.net.{InetAddress, Socket}
-import java.util.concurrent.atomic.AtomicLong
 import scala.io.StdIn.readLine
 import scala.util.{Success, Failure}
 import scala.util.control.Breaks
@@ -33,14 +30,11 @@ object MinecraftRCONShell {
                 }
 
                 /** Connect to the server and authenticate */
-                val sock: Socket = new Socket(InetAddress.getByName(host), port)
-                val reader: InputStream = sock.getInputStream
-                val writer: OutputStream = sock.getOutputStream
+                val (reader, writer) = MinecraftRCONClient.Connect(host, port)
                 MinecraftRCONClient.Authenticate(password, writer, reader) match {
                         case Success(_) => {}
                         case Failure(f) => {
                                 println("failed to authenticate")
-                                sock.close
                                 System.exit(1)
                         }
                 }
@@ -61,7 +55,6 @@ object MinecraftRCONShell {
                                 }
                         }
                 }
-                sock.close
                 System.exit(0)
         }
 }
