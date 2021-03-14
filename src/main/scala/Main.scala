@@ -35,7 +35,7 @@ object MinecraftRCONShell {
                         case Success(_) => {}
                         case Failure(f) => {
                                 println("failed to authenticate")
-                                client.Close
+                                client.Close()
                                 System.exit(1)
                         }
                 }
@@ -56,7 +56,7 @@ object MinecraftRCONShell {
                                 }
                         }
                 }
-                client.Close
+                client.Close()
                 System.exit(0)
         }
 }

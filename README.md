@@ -13,7 +13,7 @@ client.Authenticate("minecraft") // returns Try[Message], check errors with matc
 client.SendCommand("seed") // returns Try[Message], see Message.Body for response.
 
 // Disconnect cleanly when finished.
-client.Close
+client.Close()
 ```
 
 ## Shell Utility
