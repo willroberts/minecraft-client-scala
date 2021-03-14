@@ -25,6 +25,12 @@ class MinecraftRCONClient(
         /** Monotonic ID generator. */
         val requestID: AtomicLong = new AtomicLong(0)
 
+        def Close() = {
+                reader.close
+                writer.close
+                sock.close
+        }
+
         /** Authenticate logs into the RCON server */
         def Authenticate(password: String): Try[Message] = {
                 sendMessage(MessageType.Authenticate.id, password) match {

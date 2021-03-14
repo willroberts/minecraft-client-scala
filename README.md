@@ -5,9 +5,15 @@ A client for the Minecraft RCON API, written in Scala 3.
 ## Library Usage
 
 ```scala
+// Create a new client and connect to the server.
 val client = new MinecraftRCONClient("127.0.0.1", 25575)
+
+// Send some commands.
 client.Authenticate("minecraft") // returns Try[Message], check errors with match.
 client.SendCommand("seed") // returns Try[Message], see Message.Body for response.
+
+// Disconnect cleanly when finished.
+client.Close
 ```
 
 ## Shell Utility
