@@ -9,7 +9,7 @@ A client for the Minecraft RCON protocol, written in Scala 3.
 val client = new MinecraftRCONClient("127.0.0.1", 25575)
 
 // Send some commands.
-client.Authenticate("minecraft") match {
+client.Authenticate("password") match {
 	case Success(_) => { }
 	case Failure(f) => { /** handle authentication error */ }
 }
