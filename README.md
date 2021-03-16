@@ -26,7 +26,7 @@ client.Close()
 
 ## Shell Utility
 
-If you are looking for a tool rather than a library, run the `main` package with `sbt`:
+If you are looking for a tool rather than a library, try the shell command:
 
 ```bash
 $ sbt run --host 127.0.0.1 --port 25575 --password minecraft
