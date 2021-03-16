@@ -1,6 +1,6 @@
 # minecraft-client-scala
 
-A client for the Minecraft RCON API, written in Scala 3.
+A client for the Minecraft RCON protocol, written in Scala 3.
 
 ## Library Usage
 
@@ -9,8 +9,16 @@ A client for the Minecraft RCON API, written in Scala 3.
 val client = new MinecraftRCONClient("127.0.0.1", 25575)
 
 // Send some commands.
-client.Authenticate("minecraft") // returns Try[Message], check errors with match.
-client.SendCommand("seed") // returns Try[Message], see Message.Body for response.
+client.Authenticate("minecraft") match {
+	case Success(_) => { }
+	case Failure(f) => { /** handle authentication error */ }
+}
+client.SendCommand("seed") match {
+	case Success(resp) => {
+		println(resp.Body) // "Seed: [1871644822592853811]"
+	}
+	case Failure(f) => { /** handle error */ }
+}
 
 // Disconnect cleanly when finished.
 client.Close()
@@ -21,8 +29,7 @@ client.Close()
 If you are looking for a tool rather than a library, run the `main` package with `sbt`:
 
 ```bash
-$ sbt
-sbt> run --host 127.0.0.1 --port 25575 --password minecraft
+$ sbt run --host 127.0.0.1 --port 25575 --password minecraft
 ...
 starting RCON shell, quit with 'exit', 'quit', or Ctrl-C
 > seed
@@ -34,7 +41,7 @@ There are 0 of a max of 20 players online:
 
 ## Starting a server for testing
 
-```bash
+```
 $ docker pull itzg/minecraft-server
 $ docker run --name=minecraft-server -p 25575:25575 -d -e EULA=TRUE itzg/minecraft-server
 ```
@@ -43,7 +50,7 @@ $ docker run --name=minecraft-server -p 25575:25575 -d -e EULA=TRUE itzg/minecra
 
 After starting the test server in Docker:
 
-```bash
+```
 $ sbt test
 ```
 
