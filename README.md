@@ -36,7 +36,6 @@ starting RCON shell, quit with 'exit', 'quit', or Ctrl-C
 Seed: [4740948148837486117]
 > list
 There are 0 of a max of 20 players online:
-> exit
 ```
 
 ## Starting a server for testing
