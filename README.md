@@ -14,9 +14,7 @@ client.Authenticate("password") match {
 	case Failure(f) => { /** handle authentication error */ }
 }
 client.SendCommand("seed") match {
-	case Success(resp) => {
-		println(resp.Body) // "Seed: [1871644822592853811]"
-	}
+	case Success(resp) => { println(resp.Body) } // "Seed: [1871644822592853811]"
 	case Failure(f) => { /** handle error */ }
 }
 
