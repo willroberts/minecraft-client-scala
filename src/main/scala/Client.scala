@@ -48,7 +48,7 @@ class MinecraftRCONClient(
         def sendMessage(msgType: Int, body: String): Try[Message] = {
                 val reqSize: Int = body.length + MessageEncoder.HeaderSize
                 val reqID: Int = requestID.getAndIncrement.toInt
-                val req: Message = Message(reqSize, reqID, msgType, body.getBytes)
+                val req: Message = Message(reqSize, reqID, msgType, body)
                 val reqBytes: ByteBuffer = MessageEncoder.EncodeMessage(req)
 
                 /** Send the request to the server. */

@@ -7,7 +7,7 @@ final case class Message (
         val Size: Int,
         val ID: Int,
         val Type: Int,
-        val Body: Array[Byte],
+        val Body: String,
 )
 
 /** MessageType enumerates the type codes for RCON messages, e.g. 2 for 'COMMAND'. */
@@ -19,6 +19,7 @@ object MessageType extends Enumeration {
 /** MessageEncoder encapsulates message encoding and decoding logic. */
 object MessageEncoder {
         val HeaderSize: Int = 10;
+        val terminator: Array[Byte] = Array[Byte](0, 0)
 
         /** Encodes a message as little-endian bytes.
           * Format: [4-byte message size | 4-byte message id | 4-byte message size | variable length message | 2-byte terminator]. */
@@ -29,9 +30,8 @@ object MessageEncoder {
                 bytes.putInt(msg.Size)
                 bytes.putInt(msg.ID)
                 bytes.putInt(msg.Type)
-                bytes.put(msg.Body)
-                bytes.put(0.toByte)
-                bytes.put(0.toByte)
+                bytes.put(msg.Body.getBytes)
+                bytes.put(terminator)
                 bytes.flip
 
                 bytes
@@ -52,6 +52,6 @@ object MessageEncoder {
                         bodyBuffer(i) = bytes.get
                 }
 
-                Message(size, id, msgType, bodyBuffer)
+                Message(size, id, msgType, bodyBuffer.map(_.toChar).mkString)
         }
 }

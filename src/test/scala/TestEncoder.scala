@@ -15,14 +15,14 @@ class TestEncodeMessage {
       0, 0 /** Terminator */
     )
 
-    val result = MessageEncoder.EncodeMessage(Message(14, 1, MessageType.Command.id, "test".getBytes))
-    assertArrayEquals(result.array, expected)
+    val result = MessageEncoder.EncodeMessage(Message(14, 1, MessageType.Command.id, "test"))
+    assertArrayEquals(expected, result.array)
   }
 }
 
 class TestDecodeMessage {
   @Test def testDecodeMessage(): Unit = {
-    val expected: Message = Message(14, 1, MessageType.Response.id, "test".getBytes)
+    val expected: Message = Message(14, 1, MessageType.Response.id, "test")
 
     val input: ByteBuffer = ByteBuffer.allocate(16)
     input.order(ByteOrder.LITTLE_ENDIAN)
@@ -33,9 +33,9 @@ class TestDecodeMessage {
     input.flip()
 
     val output = MessageEncoder.DecodeMessage(input)
-    assertEquals(output.Size, expected.Size)
-    assertEquals(output.ID, expected.ID)
-    assertEquals(output.Type, expected.Type)
-    assertArrayEquals(output.Body, expected.Body)
+    assertEquals(expected.Size, output.Size)
+    assertEquals(expected.ID, output.ID)
+    assertEquals(expected.Type, output.Type)
+    assertEquals(expected.Body, output.Body)
   }
 }
