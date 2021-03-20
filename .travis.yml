@@ -1,4 +1,7 @@
 language: scala
 
 scala:
-- 3.x
+- 2.13.x # Travis does not yet support Scala 3.
+
+jdk:
+- openjdk15
