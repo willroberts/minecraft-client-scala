@@ -1,7 +1,7 @@
 # minecraft-client-scala
 
-[![Travis Badge]][Travis]
 [![License Badge]][License]
+[![Build Badge]][Build]
 
 A client for the Minecraft RCON protocol, written in Scala 3.
 
@@ -58,7 +58,7 @@ $ sbt test
 
 - https://wiki.vg/Rcon
 
-[Travis]: https://travis-ci.org/willroberts/minecraft-client-scala
-[Travis Badge]: https://api.travis-ci.org/willroberts/minecraft-client-scala.svg?branch=main
 [License]: https://www.gnu.org/licenses/gpl-3.0
 [License Badge]: https://img.shields.io/badge/License-GPLv3-blue.svg
+[Build]: https://github.com/willroberts/minecraft-client-scala/actions/workflows/build.yaml
+[Build Badge]: https://github.com/willroberts/minecraft-client-scala/actions/workflows/build.yaml/badge.svg
